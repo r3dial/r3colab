@@ -245,6 +245,54 @@
         const gameOverText = document.getElementById('gameOverText');
         const attractModeOverlay = document.getElementById('attractModeOverlay');
 
+        // 8-bit Sound System using Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function play8bitSound(type) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            const now = audioContext.currentTime;
+
+            switch(type) {
+                case 'eat':
+                    // Upward chirp sound for eating food
+                    oscillator.type = 'square';
+                    oscillator.frequency.setValueAtTime(400, now);
+                    oscillator.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+                    gainNode.gain.setValueAtTime(0.3, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.1);
+                    break;
+
+                case 'gameOver':
+                    // Descending dramatic sound for game over
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(400, now);
+                    oscillator.frequency.exponentialRampToValueAtTime(100, now + 0.5);
+                    gainNode.gain.setValueAtTime(0.3, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.5);
+                    break;
+
+                case 'start':
+                    // Quick ascending beep for game start
+                    oscillator.type = 'square';
+                    oscillator.frequency.setValueAtTime(300, now);
+                    oscillator.frequency.exponentialRampToValueAtTime(600, now + 0.15);
+                    gainNode.gain.setValueAtTime(0.2, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.15);
+                    break;
+            }
+        }
+
         // Game settings
         const gridSize = 20;
         let tileCount;
@@ -341,6 +389,7 @@
             attractMode = false;
             aiMode = false;
             attractModeOverlay.style.display = 'none';
+            play8bitSound('start');
             restartGame();
         }
 
@@ -458,6 +507,7 @@
                     localStorage.setItem('snakeHighScore', highScore);
                 }
 
+                play8bitSound('eat');
                 placeFood();
             } else {
                 snake.pop();
@@ -579,6 +629,10 @@
         function gameOver() {
             gameRunning = false;
             clearInterval(gameLoop);
+
+            if (!attractMode) {
+                play8bitSound('gameOver');
+            }
 
             if (attractMode) {
                 // In attract mode, restart the demo automatically
