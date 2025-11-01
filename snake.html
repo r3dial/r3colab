@@ -172,6 +172,45 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.8; }
         }
+
+        .attract-mode-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ffff;
+            font-size: 2.5em;
+            font-weight: bold;
+            display: none;
+            text-align: center;
+            text-shadow:
+                0 0 10px #00ffff,
+                0 0 20px #00ffff,
+                0 0 30px #00ffff;
+            animation: pulse-attract 2s ease-in-out infinite;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .attract-mode-overlay .demo-label {
+            font-size: 0.6em;
+            color: #ff00ff;
+            text-shadow:
+                0 0 10px #ff00ff,
+                0 0 20px #ff00ff;
+            margin-bottom: 20px;
+        }
+
+        @keyframes pulse-attract {
+            0%, 100% {
+                opacity: 0.7;
+                text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 30px #00ffff;
+            }
+            50% {
+                opacity: 1;
+                text-shadow: 0 0 20px #00ffff, 0 0 30px #00ffff, 0 0 40px #00ffff, 0 0 50px #00ffff;
+            }
+        }
     </style>
 </head>
 <body>
@@ -192,6 +231,10 @@
             <button id="restartBtn" onclick="restartGame()">Restart Game</button>
         </div>
         <div id="gameOverText" class="game-over">Game Over! Press Restart</div>
+        <div id="attractModeOverlay" class="attract-mode-overlay">
+            <div class="demo-label">DEMO MODE</div>
+            <div>PRESS ANY KEY TO START</div>
+        </div>
     </div>
 
     <script>
@@ -200,6 +243,7 @@
         const scoreElement = document.getElementById('score');
         const highScoreElement = document.getElementById('highScore');
         const gameOverText = document.getElementById('gameOverText');
+        const attractModeOverlay = document.getElementById('attractModeOverlay');
 
         // Game settings
         const gridSize = 20;
@@ -238,6 +282,8 @@
         highScoreElement.textContent = highScore;
         let gameRunning = false;
         let gameLoop;
+        let attractMode = true; // Start in attract mode
+        let aiMode = false; // Flag to indicate AI is playing
 
         // Input handling
         let inputQueue = [];
@@ -249,6 +295,12 @@
             // Prevent default arrow key scrolling
             if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
                 e.preventDefault();
+            }
+
+            // If in attract mode, any key starts the game
+            if (attractMode) {
+                exitAttractMode();
+                return;
             }
 
             if (inputQueue.length >= maxInputQueue) return;
@@ -285,6 +337,13 @@
             }
         }
 
+        function exitAttractMode() {
+            attractMode = false;
+            aiMode = false;
+            attractModeOverlay.style.display = 'none';
+            restartGame();
+        }
+
         function startGame() {
             if (gameRunning) return;
             gameRunning = true;
@@ -292,12 +351,83 @@
             gameLoop = setInterval(update, 100);
         }
 
+        // Simple AI logic for attract mode
+        function getAIMove() {
+            const head = snake[0];
+
+            // Calculate the direction to the food
+            const toFoodX = food.x - head.x;
+            const toFoodY = food.y - head.y;
+
+            // Get valid moves (not opposite to current direction and not into walls/self)
+            const possibleMoves = [];
+
+            // Try each direction
+            const moves = [
+                {dx: 0, dy: -1, priority: 0}, // up
+                {dx: 0, dy: 1, priority: 0},  // down
+                {dx: -1, dy: 0, priority: 0}, // left
+                {dx: 1, dy: 0, priority: 0}   // right
+            ];
+
+            moves.forEach(move => {
+                // Check if move is opposite to current direction
+                if ((move.dx === -dx && move.dy === -dy) && (dx !== 0 || dy !== 0)) {
+                    return;
+                }
+
+                const newHead = {x: head.x + move.dx, y: head.y + move.dy};
+
+                // Check if move is valid (not into wall or self)
+                if (newHead.x >= 0 && newHead.x < tileCount &&
+                    newHead.y >= 0 && newHead.y < tileCount &&
+                    !snake.some(segment => segment.x === newHead.x && segment.y === newHead.y)) {
+
+                    // Calculate priority based on distance to food
+                    move.priority = 0;
+
+                    // Prioritize moves toward food
+                    if (Math.abs(toFoodX) > Math.abs(toFoodY)) {
+                        // Horizontal movement is more important
+                        if (toFoodX > 0 && move.dx === 1) move.priority += 10;
+                        if (toFoodX < 0 && move.dx === -1) move.priority += 10;
+                        if (toFoodY > 0 && move.dy === 1) move.priority += 5;
+                        if (toFoodY < 0 && move.dy === -1) move.priority += 5;
+                    } else {
+                        // Vertical movement is more important
+                        if (toFoodY > 0 && move.dy === 1) move.priority += 10;
+                        if (toFoodY < 0 && move.dy === -1) move.priority += 10;
+                        if (toFoodX > 0 && move.dx === 1) move.priority += 5;
+                        if (toFoodX < 0 && move.dx === -1) move.priority += 5;
+                    }
+
+                    possibleMoves.push(move);
+                }
+            });
+
+            // Sort by priority and return best move
+            if (possibleMoves.length > 0) {
+                possibleMoves.sort((a, b) => b.priority - a.priority);
+                return possibleMoves[0];
+            }
+
+            // If no valid moves, return current direction
+            return {dx, dy};
+        }
+
         function update() {
-            // Process input queue
-            if (inputQueue.length > 0) {
-                const input = inputQueue.shift();
-                dx = input.dx;
-                dy = input.dy;
+            // AI control in attract mode
+            if (aiMode && attractMode) {
+                const aiMove = getAIMove();
+                dx = aiMove.dx;
+                dy = aiMove.dy;
+            } else if (!aiMode) {
+                // Process input queue for player control
+                if (inputQueue.length > 0) {
+                    const input = inputQueue.shift();
+                    dx = input.dx;
+                    dy = input.dy;
+                }
             }
 
             // Move snake
@@ -449,7 +579,16 @@
         function gameOver() {
             gameRunning = false;
             clearInterval(gameLoop);
-            gameOverText.style.display = 'block';
+
+            if (attractMode) {
+                // In attract mode, restart the demo automatically
+                setTimeout(() => {
+                    restartGame();
+                    startAttractMode();
+                }, 1500);
+            } else {
+                gameOverText.style.display = 'block';
+            }
         }
 
         function restartGame() {
@@ -465,8 +604,21 @@
             draw();
         }
 
-        // Initial draw
+        function startAttractMode() {
+            attractMode = true;
+            aiMode = true;
+            attractModeOverlay.style.display = 'block';
+
+            // Give the snake an initial direction
+            dx = 1;
+            dy = 0;
+
+            startGame();
+        }
+
+        // Initial draw and start attract mode
         draw();
+        startAttractMode();
     </script>
 </body>
 </html>
