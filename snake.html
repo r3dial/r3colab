@@ -438,6 +438,11 @@
                     }
                 }
 
+                // Apply ReLU derivative to hidden errors
+                for (let j = 0; j < this.hiddenSize; j++) {
+                    if (hidden[j] <= 0) hiddenErrors[j] = 0;
+                }
+
                 // Update output layer weights and biases
                 for (let i = 0; i < this.hiddenSize; i++) {
                     for (let j = 0; j < this.outputSize; j++) {
@@ -497,8 +502,8 @@
         // ===== DQN AGENT =====
         class DQNAgent {
             constructor() {
-                // Network architecture: 24 inputs -> 128 hidden -> 4 outputs (up, down, left, right)
-                this.network = new NeuralNetwork(24, 128, 4);
+                // Network architecture: 22 inputs -> 128 hidden -> 4 outputs (up, down, left, right)
+                this.network = new NeuralNetwork(22, 128, 4);
                 this.targetNetwork = this.network.copy();
 
                 // Experience replay
@@ -509,8 +514,8 @@
                 // Learning parameters
                 this.gamma = 0.95; // Discount factor
                 this.epsilon = 1.0; // Exploration rate
-                this.epsilonMin = 0.01;
-                this.epsilonDecay = 0.995;
+                this.epsilonMin = 0.05;
+                this.epsilonDecay = 0.999;
                 this.learningRate = 0.0005;
 
                 // Training statistics
@@ -598,6 +603,10 @@
                 }
 
                 const qValues = this.network.predict(state);
+                // Guard against NaN or Infinity in Q-values
+                if (!qValues.every(Number.isFinite)) {
+                    return Math.floor(Math.random() * 4);
+                }
                 return qValues.indexOf(Math.max(...qValues));
             }
 
@@ -699,7 +708,7 @@
             }
 
             reset() {
-                this.network = new NeuralNetwork(24, 128, 4);
+                this.network = new NeuralNetwork(22, 128, 4);
                 this.targetNetwork = this.network.copy();
                 this.memory = [];
                 this.epsilon = 1.0;
@@ -1015,7 +1024,10 @@
             if (currentGameMode === 'train' && previousState) {
                 const nextState = aiAgent.getState(snake, food, tileCount, dx, dy);
                 aiAgent.remember(previousState, previousAction, reward, nextState, false);
-                aiAgent.replay();
+                // Run multiple replay batches for faster learning
+                for (let k = 0; k < 3; k++) {
+                    aiAgent.replay();
+                }
             }
 
             draw();
