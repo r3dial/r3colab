@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake Game - Neon Edition</title>
+    <title>Snake Game - AI Learning Edition</title>
     <style>
         * {
             margin: 0;
@@ -211,6 +211,96 @@
                 text-shadow: 0 0 20px #00ffff, 0 0 30px #00ffff, 0 0 40px #00ffff, 0 0 50px #00ffff;
             }
         }
+
+        .ai-controls {
+            position: absolute;
+            top: 70px;
+            right: 20px;
+            color: #00ffff;
+            text-align: left;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 0, 255, 0.5);
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+            max-width: 280px;
+        }
+
+        .ai-controls h3 {
+            color: #ff00ff;
+            text-shadow: 0 0 5px #ff00ff;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .ai-controls .mode-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .ai-controls button {
+            padding: 8px 15px;
+            font-size: 0.9em;
+            margin: 0;
+        }
+
+        .ai-controls button.active {
+            background: rgba(255, 0, 255, 0.5);
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.8);
+        }
+
+        .ai-stats {
+            font-size: 0.85em;
+            line-height: 1.6;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .ai-stats div {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .ai-stats .label {
+            color: #00ffff;
+        }
+
+        .ai-stats .value {
+            color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+            font-weight: bold;
+        }
+
+        .training-speed {
+            margin-top: 10px;
+        }
+
+        .training-speed label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.85em;
+        }
+
+        .training-speed input[type="range"] {
+            width: 100%;
+        }
+
+        .model-controls {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .model-controls button {
+            flex: 1;
+            padding: 6px 10px;
+            font-size: 0.8em;
+        }
     </style>
 </head>
 <body>
@@ -235,6 +325,29 @@
             <div class="demo-label">DEMO MODE</div>
             <div>PRESS ANY KEY TO START</div>
         </div>
+        <div class="ai-controls">
+            <h3>🤖 AI Controls</h3>
+            <div class="mode-buttons">
+                <button id="humanModeBtn" class="active" onclick="setGameMode('human')">👤 Human Play</button>
+                <button id="aiDemoBtn" onclick="setGameMode('demo')">🎮 AI Demo</button>
+                <button id="aiTrainBtn" onclick="setGameMode('train')">🧠 AI Training</button>
+            </div>
+            <div class="ai-stats">
+                <div><span class="label">Games Played:</span> <span class="value" id="gamesPlayed">0</span></div>
+                <div><span class="label">Average Score:</span> <span class="value" id="avgScore">0</span></div>
+                <div><span class="label">Best AI Score:</span> <span class="value" id="bestAIScore">0</span></div>
+                <div><span class="label">Epsilon:</span> <span class="value" id="epsilon">1.00</span></div>
+            </div>
+            <div class="training-speed">
+                <label>Training Speed: <span id="speedLabel">1x</span></label>
+                <input type="range" id="speedSlider" min="1" max="50" value="1" onchange="updateTrainingSpeed(this.value)">
+            </div>
+            <div class="model-controls">
+                <button onclick="saveModel()">💾 Save</button>
+                <button onclick="loadModel()">📂 Load</button>
+                <button onclick="resetModel()">🔄 Reset</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -244,6 +357,365 @@
         const highScoreElement = document.getElementById('highScore');
         const gameOverText = document.getElementById('gameOverText');
         const attractModeOverlay = document.getElementById('attractModeOverlay');
+
+        // ===== NEURAL NETWORK IMPLEMENTATION =====
+        class NeuralNetwork {
+            constructor(inputSize, hiddenSize, outputSize) {
+                this.inputSize = inputSize;
+                this.hiddenSize = hiddenSize;
+                this.outputSize = outputSize;
+
+                // Initialize weights with Xavier initialization
+                this.weightsIH = this.randomMatrix(inputSize, hiddenSize, Math.sqrt(2.0 / inputSize));
+                this.weightsHO = this.randomMatrix(hiddenSize, outputSize, Math.sqrt(2.0 / hiddenSize));
+                this.biasH = new Array(hiddenSize).fill(0);
+                this.biasO = new Array(outputSize).fill(0);
+            }
+
+            randomMatrix(rows, cols, scale = 0.5) {
+                const matrix = [];
+                for (let i = 0; i < rows; i++) {
+                    matrix[i] = [];
+                    for (let j = 0; j < cols; j++) {
+                        matrix[i][j] = (Math.random() * 2 - 1) * scale;
+                    }
+                }
+                return matrix;
+            }
+
+            sigmoid(x) {
+                return 1 / (1 + Math.exp(-x));
+            }
+
+            relu(x) {
+                return Math.max(0, x);
+            }
+
+            forward(inputs) {
+                // Hidden layer with ReLU activation
+                const hidden = [];
+                for (let i = 0; i < this.hiddenSize; i++) {
+                    let sum = this.biasH[i];
+                    for (let j = 0; j < this.inputSize; j++) {
+                        sum += inputs[j] * this.weightsIH[j][i];
+                    }
+                    hidden[i] = this.relu(sum);
+                }
+
+                // Output layer
+                const output = [];
+                for (let i = 0; i < this.outputSize; i++) {
+                    let sum = this.biasO[i];
+                    for (let j = 0; j < this.hiddenSize; j++) {
+                        sum += hidden[j] * this.weightsHO[j][i];
+                    }
+                    output[i] = sum;
+                }
+
+                return { hidden, output };
+            }
+
+            predict(inputs) {
+                const result = this.forward(inputs);
+                return result.output;
+            }
+
+            train(inputs, targetQValues, learningRate = 0.001) {
+                // Forward pass
+                const { hidden, output } = this.forward(inputs);
+
+                // Calculate output error
+                const outputErrors = [];
+                for (let i = 0; i < this.outputSize; i++) {
+                    outputErrors[i] = targetQValues[i] - output[i];
+                }
+
+                // Backpropagate to hidden layer
+                const hiddenErrors = new Array(this.hiddenSize).fill(0);
+                for (let i = 0; i < this.hiddenSize; i++) {
+                    for (let j = 0; j < this.outputSize; j++) {
+                        hiddenErrors[i] += outputErrors[j] * this.weightsHO[i][j];
+                    }
+                }
+
+                // Update output layer weights and biases
+                for (let i = 0; i < this.hiddenSize; i++) {
+                    for (let j = 0; j < this.outputSize; j++) {
+                        this.weightsHO[i][j] += learningRate * outputErrors[j] * hidden[i];
+                    }
+                }
+                for (let i = 0; i < this.outputSize; i++) {
+                    this.biasO[i] += learningRate * outputErrors[i];
+                }
+
+                // Update hidden layer weights and biases (only if hidden unit was active)
+                for (let i = 0; i < this.inputSize; i++) {
+                    for (let j = 0; j < this.hiddenSize; j++) {
+                        if (hidden[j] > 0) { // ReLU derivative
+                            this.weightsIH[i][j] += learningRate * hiddenErrors[j] * inputs[i];
+                        }
+                    }
+                }
+                for (let i = 0; i < this.hiddenSize; i++) {
+                    if (hidden[i] > 0) {
+                        this.biasH[i] += learningRate * hiddenErrors[i];
+                    }
+                }
+            }
+
+            copy() {
+                const newNN = new NeuralNetwork(this.inputSize, this.hiddenSize, this.outputSize);
+                newNN.weightsIH = this.weightsIH.map(row => [...row]);
+                newNN.weightsHO = this.weightsHO.map(row => [...row]);
+                newNN.biasH = [...this.biasH];
+                newNN.biasO = [...this.biasO];
+                return newNN;
+            }
+
+            toJSON() {
+                return {
+                    inputSize: this.inputSize,
+                    hiddenSize: this.hiddenSize,
+                    outputSize: this.outputSize,
+                    weightsIH: this.weightsIH,
+                    weightsHO: this.weightsHO,
+                    biasH: this.biasH,
+                    biasO: this.biasO
+                };
+            }
+
+            static fromJSON(data) {
+                const nn = new NeuralNetwork(data.inputSize, data.hiddenSize, data.outputSize);
+                nn.weightsIH = data.weightsIH;
+                nn.weightsHO = data.weightsHO;
+                nn.biasH = data.biasH;
+                nn.biasO = data.biasO;
+                return nn;
+            }
+        }
+
+        // ===== DQN AGENT =====
+        class DQNAgent {
+            constructor() {
+                // Network architecture: 24 inputs -> 128 hidden -> 4 outputs (up, down, left, right)
+                this.network = new NeuralNetwork(24, 128, 4);
+                this.targetNetwork = this.network.copy();
+
+                // Experience replay
+                this.memory = [];
+                this.memorySize = 10000;
+                this.batchSize = 32;
+
+                // Learning parameters
+                this.gamma = 0.95; // Discount factor
+                this.epsilon = 1.0; // Exploration rate
+                this.epsilonMin = 0.01;
+                this.epsilonDecay = 0.995;
+                this.learningRate = 0.0005;
+
+                // Training statistics
+                this.gamesPlayed = 0;
+                this.totalScore = 0;
+                this.bestScore = 0;
+                this.updateTargetEvery = 10;
+            }
+
+            getState(snake, food, tileCount, dx, dy) {
+                const head = snake[0];
+
+                // Normalize positions
+                const normalizedHeadX = head.x / tileCount;
+                const normalizedHeadY = head.y / tileCount;
+                const normalizedFoodX = food.x / tileCount;
+                const normalizedFoodY = food.y / tileCount;
+
+                // Direction one-hot encoding
+                const dirUp = dy === -1 ? 1 : 0;
+                const dirDown = dy === 1 ? 1 : 0;
+                const dirLeft = dx === -1 ? 1 : 0;
+                const dirRight = dx === 1 ? 1 : 0;
+
+                // Danger detection in 8 directions
+                const dangers = this.detectDangers(snake, head, tileCount);
+
+                // Food direction
+                const foodUp = food.y < head.y ? 1 : 0;
+                const foodDown = food.y > head.y ? 1 : 0;
+                const foodLeft = food.x < head.x ? 1 : 0;
+                const foodRight = food.x > head.x ? 1 : 0;
+
+                // Distance to food
+                const foodDist = Math.sqrt(Math.pow(food.x - head.x, 2) + Math.pow(food.y - head.y, 2)) / tileCount;
+
+                // Snake length (normalized)
+                const snakeLength = snake.length / (tileCount * tileCount);
+
+                return [
+                    normalizedHeadX, normalizedHeadY,
+                    normalizedFoodX, normalizedFoodY,
+                    dirUp, dirDown, dirLeft, dirRight,
+                    ...dangers,
+                    foodUp, foodDown, foodLeft, foodRight,
+                    foodDist,
+                    snakeLength
+                ];
+            }
+
+            detectDangers(snake, head, tileCount) {
+                const directions = [
+                    {dx: 0, dy: -1},  // up
+                    {dx: 1, dy: -1},  // up-right
+                    {dx: 1, dy: 0},   // right
+                    {dx: 1, dy: 1},   // down-right
+                    {dx: 0, dy: 1},   // down
+                    {dx: -1, dy: 1},  // down-left
+                    {dx: -1, dy: 0},  // left
+                    {dx: -1, dy: -1}  // up-left
+                ];
+
+                return directions.map(dir => {
+                    const newX = head.x + dir.dx;
+                    const newY = head.y + dir.dy;
+
+                    // Check wall collision
+                    if (newX < 0 || newX >= tileCount || newY < 0 || newY >= tileCount) {
+                        return 1;
+                    }
+
+                    // Check self collision
+                    if (snake.some(segment => segment.x === newX && segment.y === newY)) {
+                        return 1;
+                    }
+
+                    return 0;
+                });
+            }
+
+            act(state, training = false) {
+                // Epsilon-greedy policy
+                if (training && Math.random() < this.epsilon) {
+                    return Math.floor(Math.random() * 4);
+                }
+
+                const qValues = this.network.predict(state);
+                return qValues.indexOf(Math.max(...qValues));
+            }
+
+            remember(state, action, reward, nextState, done) {
+                this.memory.push({ state, action, reward, nextState, done });
+                if (this.memory.length > this.memorySize) {
+                    this.memory.shift();
+                }
+            }
+
+            replay() {
+                if (this.memory.length < this.batchSize) {
+                    return;
+                }
+
+                // Sample random batch
+                const batch = [];
+                for (let i = 0; i < this.batchSize; i++) {
+                    const index = Math.floor(Math.random() * this.memory.length);
+                    batch.push(this.memory[index]);
+                }
+
+                // Train on batch
+                batch.forEach(({ state, action, reward, nextState, done }) => {
+                    const target = this.network.predict(state);
+
+                    if (done) {
+                        target[action] = reward;
+                    } else {
+                        const nextQValues = this.targetNetwork.predict(nextState);
+                        target[action] = reward + this.gamma * Math.max(...nextQValues);
+                    }
+
+                    this.network.train(state, target, this.learningRate);
+                });
+            }
+
+            updateTarget() {
+                this.targetNetwork = this.network.copy();
+            }
+
+            endEpisode(score) {
+                this.gamesPlayed++;
+                this.totalScore += score;
+                this.bestScore = Math.max(this.bestScore, score);
+
+                // Decay epsilon
+                if (this.epsilon > this.epsilonMin) {
+                    this.epsilon *= this.epsilonDecay;
+                }
+
+                // Update target network periodically
+                if (this.gamesPlayed % this.updateTargetEvery === 0) {
+                    this.updateTarget();
+                }
+
+                // Update UI
+                this.updateStats();
+            }
+
+            updateStats() {
+                document.getElementById('gamesPlayed').textContent = this.gamesPlayed;
+                document.getElementById('avgScore').textContent =
+                    (this.totalScore / this.gamesPlayed).toFixed(1);
+                document.getElementById('bestAIScore').textContent = this.bestScore;
+                document.getElementById('epsilon').textContent = this.epsilon.toFixed(2);
+            }
+
+            save() {
+                const data = {
+                    network: this.network.toJSON(),
+                    gamesPlayed: this.gamesPlayed,
+                    totalScore: this.totalScore,
+                    bestScore: this.bestScore,
+                    epsilon: this.epsilon
+                };
+                localStorage.setItem('snakeAIModel', JSON.stringify(data));
+                return true;
+            }
+
+            load() {
+                const data = localStorage.getItem('snakeAIModel');
+                if (!data) return false;
+
+                try {
+                    const parsed = JSON.parse(data);
+                    this.network = NeuralNetwork.fromJSON(parsed.network);
+                    this.targetNetwork = this.network.copy();
+                    this.gamesPlayed = parsed.gamesPlayed || 0;
+                    this.totalScore = parsed.totalScore || 0;
+                    this.bestScore = parsed.bestScore || 0;
+                    this.epsilon = parsed.epsilon || this.epsilonMin;
+                    this.updateStats();
+                    return true;
+                } catch (e) {
+                    console.error('Failed to load model:', e);
+                    return false;
+                }
+            }
+
+            reset() {
+                this.network = new NeuralNetwork(24, 128, 4);
+                this.targetNetwork = this.network.copy();
+                this.memory = [];
+                this.epsilon = 1.0;
+                this.gamesPlayed = 0;
+                this.totalScore = 0;
+                this.bestScore = 0;
+                this.updateStats();
+            }
+        }
+
+        // Initialize AI agent
+        const aiAgent = new DQNAgent();
+        let currentGameMode = 'human';
+        let previousState = null;
+        let previousAction = null;
+        let trainingSpeed = 1;
 
         // 8-bit Sound System using Web Audio API
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -330,8 +802,6 @@
         highScoreElement.textContent = highScore;
         let gameRunning = false;
         let gameLoop;
-        let attractMode = true; // Start in attract mode
-        let aiMode = false; // Flag to indicate AI is playing
 
         // Input handling
         let inputQueue = [];
@@ -345,9 +815,8 @@
                 e.preventDefault();
             }
 
-            // If in attract mode, any key starts the game
-            if (attractMode) {
-                exitAttractMode();
+            // Only accept keyboard input in human mode
+            if (currentGameMode !== 'human') {
                 return;
             }
 
@@ -385,19 +854,12 @@
             }
         }
 
-        function exitAttractMode() {
-            attractMode = false;
-            aiMode = false;
-            attractModeOverlay.style.display = 'none';
-            play8bitSound('start');
-            restartGame();
-        }
-
         function startGame() {
             if (gameRunning) return;
             gameRunning = true;
             gameOverText.style.display = 'none';
-            gameLoop = setInterval(update, 100);
+            const interval = currentGameMode === 'train' ? Math.max(10, 100 / trainingSpeed) : 100;
+            gameLoop = setInterval(update, interval);
         }
 
         // Simple AI logic for attract mode
@@ -465,12 +927,33 @@
         }
 
         function update() {
-            // AI control in attract mode
-            if (aiMode && attractMode) {
-                const aiMove = getAIMove();
-                dx = aiMove.dx;
-                dy = aiMove.dy;
-            } else if (!aiMode) {
+            // Get current state
+            const currentState = aiAgent.getState(snake, food, tileCount, dx, dy);
+
+            // Determine direction based on game mode
+            if (currentGameMode === 'demo' || currentGameMode === 'train') {
+                // AI control
+                const action = aiAgent.act(currentState, currentGameMode === 'train');
+                const directions = [
+                    {dx: 0, dy: -1},  // 0: up
+                    {dx: 0, dy: 1},   // 1: down
+                    {dx: -1, dy: 0},  // 2: left
+                    {dx: 1, dy: 0}    // 3: right
+                ];
+
+                // Only change direction if it's not opposite to current direction
+                const newDir = directions[action];
+                if ((newDir.dx !== -dx || newDir.dy !== -dy) || (dx === 0 && dy === 0)) {
+                    dx = newDir.dx;
+                    dy = newDir.dy;
+                }
+
+                // Store for training
+                if (currentGameMode === 'train') {
+                    previousState = currentState;
+                    previousAction = action;
+                }
+            } else if (currentGameMode === 'human') {
                 // Process input queue for player control
                 if (inputQueue.length > 0) {
                     const input = inputQueue.shift();
@@ -484,18 +967,31 @@
 
             // Check wall collision
             if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+                if (currentGameMode === 'train' && previousState) {
+                    const reward = -10; // Penalty for dying
+                    aiAgent.remember(previousState, previousAction, reward, currentState, true);
+                    aiAgent.replay();
+                    aiAgent.endEpisode(score);
+                }
                 gameOver();
                 return;
             }
 
             // Check self collision
             if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                if (currentGameMode === 'train' && previousState) {
+                    const reward = -10; // Penalty for dying
+                    aiAgent.remember(previousState, previousAction, reward, currentState, true);
+                    aiAgent.replay();
+                    aiAgent.endEpisode(score);
+                }
                 gameOver();
                 return;
             }
 
             snake.unshift(head);
 
+            let reward = 0;
             // Check food collision
             if (head.x === food.x && head.y === food.y) {
                 score += 10;
@@ -507,10 +1003,19 @@
                     localStorage.setItem('snakeHighScore', highScore);
                 }
 
+                reward = 10; // Reward for eating food
                 play8bitSound('eat');
                 placeFood();
             } else {
                 snake.pop();
+                reward = -0.1; // Small penalty for each step to encourage efficiency
+            }
+
+            // Train AI
+            if (currentGameMode === 'train' && previousState) {
+                const nextState = aiAgent.getState(snake, food, tileCount, dx, dy);
+                aiAgent.remember(previousState, previousAction, reward, nextState, false);
+                aiAgent.replay();
             }
 
             draw();
@@ -630,18 +1135,21 @@
             gameRunning = false;
             clearInterval(gameLoop);
 
-            if (!attractMode) {
+            if (currentGameMode === 'human') {
                 play8bitSound('gameOver');
-            }
-
-            if (attractMode) {
-                // In attract mode, restart the demo automatically
+                gameOverText.style.display = 'block';
+            } else if (currentGameMode === 'train') {
+                // Auto-restart in training mode
                 setTimeout(() => {
                     restartGame();
-                    startAttractMode();
+                    startGame();
+                }, 100);
+            } else if (currentGameMode === 'demo') {
+                // Restart demo mode after a brief pause
+                setTimeout(() => {
+                    restartGame();
+                    startGame();
                 }, 1500);
-            } else {
-                gameOverText.style.display = 'block';
             }
         }
 
@@ -652,27 +1160,82 @@
             score = 0;
             scoreElement.textContent = score;
             inputQueue = [];
+            previousState = null;
+            previousAction = null;
             placeFood();
             gameOverText.style.display = 'none';
             gameRunning = false;
             draw();
         }
 
-        function startAttractMode() {
-            attractMode = true;
-            aiMode = true;
-            attractModeOverlay.style.display = 'block';
+        function setGameMode(mode) {
+            currentGameMode = mode;
+            attractMode = false;
+            attractModeOverlay.style.display = 'none';
 
-            // Give the snake an initial direction
-            dx = 1;
-            dy = 0;
+            // Update button states
+            document.getElementById('humanModeBtn').classList.remove('active');
+            document.getElementById('aiDemoBtn').classList.remove('active');
+            document.getElementById('aiTrainBtn').classList.remove('active');
 
-            startGame();
+            if (mode === 'human') {
+                document.getElementById('humanModeBtn').classList.add('active');
+                aiMode = false;
+            } else if (mode === 'demo') {
+                document.getElementById('aiDemoBtn').classList.add('active');
+                aiMode = true;
+            } else if (mode === 'train') {
+                document.getElementById('aiTrainBtn').classList.add('active');
+                aiMode = true;
+            }
+
+            restartGame();
+            if (mode !== 'human') {
+                dx = 1;
+                dy = 0;
+                startGame();
+            }
         }
 
-        // Initial draw and start attract mode
+        function updateTrainingSpeed(value) {
+            trainingSpeed = parseInt(value);
+            document.getElementById('speedLabel').textContent = trainingSpeed + 'x';
+
+            if (gameRunning) {
+                clearInterval(gameLoop);
+                const interval = currentGameMode === 'train' ? Math.max(10, 100 / trainingSpeed) : 100;
+                gameLoop = setInterval(update, interval);
+            }
+        }
+
+        function saveModel() {
+            if (aiAgent.save()) {
+                alert('Model saved to localStorage!');
+            } else {
+                alert('Failed to save model.');
+            }
+        }
+
+        function loadModel() {
+            if (aiAgent.load()) {
+                alert('Model loaded successfully!');
+            } else {
+                alert('No saved model found.');
+            }
+        }
+
+        function resetModel() {
+            if (confirm('Are you sure you want to reset the AI? This will erase all training progress.')) {
+                aiAgent.reset();
+                alert('AI has been reset.');
+            }
+        }
+
+        // Initial draw
         draw();
-        startAttractMode();
+
+        // Try to load saved model
+        aiAgent.load();
     </script>
 </body>
 </html>
