@@ -63,31 +63,35 @@ Four unique snake themes, each with different gameplay characteristics:
 
 **🐍 Cyber Viper** (Default)
 - **Speed**: 100% (Normal)
-- **Points**: 100% (10 points per food)
+- **Point Multiplier**: 1.0x (10 points per food)
 - **Trail Effects**: None
 - **Starting Length**: 1 segment
 - **Best For**: Balanced gameplay
 
 **⚡ Neon Speedster**
 - **Speed**: 130% (Faster movement)
-- **Points**: 80% (8 points per food)
-- **Trail Effects**: Yes (particle trail)
+- **Point Multiplier**: 0.8x (8 points per food)
+- **Trail Effects**: Yes (electric particle trail)
 - **Starting Length**: 1 segment
 - **Best For**: High-speed action and reflex testing
 
 **💎 Data Collector**
 - **Speed**: 75% (Slower movement)
-- **Points**: 150% (15 points per food)
+- **Point Multiplier**: 1.5x (15 points per food)
 - **Trail Effects**: None
 - **Starting Length**: 2 segments
 - **Best For**: High score runs and strategic play
 
 **👻 Quantum Ghost**
 - **Speed**: 110% (Slightly faster)
-- **Points**: 120% (12 points per food)
-- **Trail Effects**: Yes (ethereal trail)
+- **Point Multiplier**: 1.2x (12 points per food)
+- **Trail Effects**: Yes (ethereal particle trail)
 - **Starting Length**: 1 segment
 - **Best For**: Bonus scoring with moderate challenge
+
+**Point Multiplier Mechanic**: Each theme applies a multiplier to the base 10 points earned per food item. This allows different themes to offer varying risk-reward tradeoffs - faster themes earn fewer points while slower themes can achieve higher scores.
+
+**Trail Particle Effects**: Themes with trail effects (⚡ Neon Speedster and 👻 Quantum Ghost) leave animated particle trails behind the snake's movement, providing visual feedback and enhancing the cyberpunk aesthetic. Trail particles fade over time and do not affect gameplay.
 
 **Theme Selection**: Click any theme card in the left panel to switch themes. Your preference is automatically saved.
 
@@ -209,6 +213,24 @@ Press **M** to open the comprehensive metrics dashboard showing:
 ---
 
 ## Developer Documentation
+
+### AI Architecture
+
+**Deep Q-Learning Network (DQN) Parameters:**
+- **Network Architecture**: 22 inputs → 128 hidden neurons → 4 outputs (up, down, left, right)
+- **Discount Factor (gamma)**: 0.95 - balances immediate vs future rewards
+- **Learning Rate**: 0.0005 - controls weight update step size
+- **Exploration Rate (epsilon)**: Starts at 1.0, decays to minimum of 0.05
+- **Epsilon Decay**: 0.999 per episode
+- **Experience Replay**: 10,000 memory size, batch size of 32
+- **Target Network Update**: Every 10 episodes
+
+**Reward Structure:**
+- **Food Consumption**: +10 points (encourages food collection)
+- **Movement Penalty**: -0.1 per step (encourages efficiency and shorter paths)
+- **Death Penalty**: -10 points (discourages collisions with walls and self)
+
+This reward structure ensures the AI learns to balance food collection with efficient pathfinding while avoiding dangerous situations.
 
 For detailed technical documentation, architecture overview, and contribution guidelines, see [DEVELOPER.md](DEVELOPER.md).
 
