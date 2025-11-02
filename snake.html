@@ -1581,25 +1581,37 @@
                 case 'ArrowUp':
                     if (lastDirection.dy === 0) {
                         inputQueue.push({dx: 0, dy: -1});
-                        if (!gameRunning) startGame();
+                        if (!gameRunning) {
+                            restartGame();
+                            startGame();
+                        }
                     }
                     break;
                 case 'ArrowDown':
                     if (lastDirection.dy === 0) {
                         inputQueue.push({dx: 0, dy: 1});
-                        if (!gameRunning) startGame();
+                        if (!gameRunning) {
+                            restartGame();
+                            startGame();
+                        }
                     }
                     break;
                 case 'ArrowLeft':
                     if (lastDirection.dx === 0) {
                         inputQueue.push({dx: -1, dy: 0});
-                        if (!gameRunning) startGame();
+                        if (!gameRunning) {
+                            restartGame();
+                            startGame();
+                        }
                     }
                     break;
                 case 'ArrowRight':
                     if (lastDirection.dx === 0) {
                         inputQueue.push({dx: 1, dy: 0});
-                        if (!gameRunning) startGame();
+                        if (!gameRunning) {
+                            restartGame();
+                            startGame();
+                        }
                     }
                     break;
             }
