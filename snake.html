@@ -225,6 +225,15 @@
             border: 2px solid rgba(255, 0, 255, 0.5);
             box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
             max-width: 280px;
+            transition: all 0.3s ease;
+        }
+
+        .ai-controls.collapsed {
+            padding: 10px;
+        }
+
+        .ai-controls.collapsed .ai-content {
+            display: none;
         }
 
         .ai-controls h3 {
@@ -315,6 +324,15 @@
             border: 2px solid rgba(0, 255, 255, 0.5);
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
             max-width: 280px;
+            transition: all 0.3s ease;
+        }
+
+        .theme-selector.collapsed {
+            padding: 10px;
+        }
+
+        .theme-selector.collapsed .theme-content {
+            display: none;
         }
 
         .theme-selector h3 {
@@ -413,6 +431,64 @@
             box-shadow: 0 0 5px #00ffff;
             transition: width 0.3s ease;
         }
+
+        .panel-toggle {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 0, 255, 0.3);
+            border: 1px solid #ff00ff;
+            color: #ff00ff;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .panel-toggle:hover {
+            background: rgba(255, 0, 255, 0.5);
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.6);
+            transform: scale(1.1);
+        }
+
+        .ai-visualizer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.8em;
+            pointer-events: none;
+            z-index: 5;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+        }
+
+        @media (max-width: 768px) {
+            .theme-selector, .ai-controls {
+                max-width: 200px;
+                font-size: 0.9em;
+            }
+
+            .theme-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .score-board {
+                font-size: 1em;
+                gap: 15px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -437,34 +513,41 @@
             <div class="demo-label">DEMO MODE</div>
             <div>PRESS ANY KEY TO START</div>
         </div>
-        <div class="theme-selector">
+        <div class="theme-selector" id="themePanel">
+            <button class="panel-toggle" onclick="togglePanel('themePanel')" title="Toggle Theme Panel">-</button>
             <h3>🎨 Snake Themes</h3>
-            <div class="theme-grid" id="themeGrid"></div>
-            <div class="theme-stats" id="themeStats"></div>
+            <div class="theme-content">
+                <div class="theme-grid" id="themeGrid"></div>
+                <div class="theme-stats" id="themeStats"></div>
+            </div>
         </div>
-        <div class="ai-controls">
+        <div class="ai-controls" id="aiPanel">
+            <button class="panel-toggle" onclick="togglePanel('aiPanel')" title="Toggle AI Panel">-</button>
             <h3>🤖 AI Controls</h3>
-            <div class="mode-buttons">
-                <button id="humanModeBtn" class="active" onclick="setGameMode('human')">👤 Human Play</button>
-                <button id="aiDemoBtn" onclick="setGameMode('demo')">🎮 AI Demo</button>
-                <button id="aiTrainBtn" onclick="setGameMode('train')">🧠 AI Training</button>
-            </div>
-            <div class="ai-stats">
-                <div><span class="label">Games Played:</span> <span class="value" id="gamesPlayed">0</span></div>
-                <div><span class="label">Average Score:</span> <span class="value" id="avgScore">0</span></div>
-                <div><span class="label">Best AI Score:</span> <span class="value" id="bestAIScore">0</span></div>
-                <div><span class="label">Epsilon:</span> <span class="value" id="epsilon">1.00</span></div>
-            </div>
-            <div class="training-speed">
-                <label>Training Speed: <span id="speedLabel">1x</span></label>
-                <input type="range" id="speedSlider" min="1" max="50" value="1" onchange="updateTrainingSpeed(this.value)">
-            </div>
-            <div class="model-controls">
-                <button onclick="saveModel()">💾 Save</button>
-                <button onclick="loadModel()">📂 Load</button>
-                <button onclick="resetModel()">🔄 Reset</button>
+            <div class="ai-content">
+                <div class="mode-buttons">
+                    <button id="humanModeBtn" class="active" onclick="setGameMode('human')">👤 Human Play</button>
+                    <button id="aiDemoBtn" onclick="setGameMode('demo')">🎮 AI Demo</button>
+                    <button id="aiTrainBtn" onclick="setGameMode('train')">🧠 AI Training</button>
+                </div>
+                <div class="ai-stats">
+                    <div><span class="label">Games Played:</span> <span class="value" id="gamesPlayed">0</span></div>
+                    <div><span class="label">Average Score:</span> <span class="value" id="avgScore">0</span></div>
+                    <div><span class="label">Best AI Score:</span> <span class="value" id="bestAIScore">0</span></div>
+                    <div><span class="label">Epsilon:</span> <span class="value" id="epsilon">1.00</span></div>
+                </div>
+                <div class="training-speed">
+                    <label>Training Speed: <span id="speedLabel">1x</span></label>
+                    <input type="range" id="speedSlider" min="1" max="50" value="1" onchange="updateTrainingSpeed(this.value)">
+                </div>
+                <div class="model-controls">
+                    <button onclick="saveModel()">💾 Save</button>
+                    <button onclick="loadModel()">📂 Load</button>
+                    <button onclick="resetModel()">🔄 Reset</button>
+                </div>
             </div>
         </div>
+        <div class="ai-visualizer" id="aiVisualizer"></div>
     </div>
 
     <script>
@@ -474,6 +557,36 @@
         const highScoreElement = document.getElementById('highScore');
         const gameOverText = document.getElementById('gameOverText');
         const attractModeOverlay = document.getElementById('attractModeOverlay');
+        const aiVisualizer = document.getElementById('aiVisualizer');
+
+        // ===== UI PANEL MANAGEMENT =====
+        function togglePanel(panelId) {
+            const panel = document.getElementById(panelId);
+            const toggleBtn = panel.querySelector('.panel-toggle');
+
+            if (panel.classList.contains('collapsed')) {
+                panel.classList.remove('collapsed');
+                toggleBtn.textContent = '-';
+                localStorage.setItem(panelId + '_collapsed', 'false');
+            } else {
+                panel.classList.add('collapsed');
+                toggleBtn.textContent = '+';
+                localStorage.setItem(panelId + '_collapsed', 'true');
+            }
+        }
+
+        // Restore panel states from localStorage
+        function restorePanelStates() {
+            ['themePanel', 'aiPanel'].forEach(panelId => {
+                const isCollapsed = localStorage.getItem(panelId + '_collapsed') === 'true';
+                if (isCollapsed) {
+                    const panel = document.getElementById(panelId);
+                    const toggleBtn = panel.querySelector('.panel-toggle');
+                    panel.classList.add('collapsed');
+                    toggleBtn.textContent = '+';
+                }
+            });
+        }
 
         // ===== SNAKE THEME SYSTEM =====
         const snakeThemes = {
@@ -1180,18 +1293,135 @@
             gameLoop = setInterval(update, interval);
         }
 
-        // Simple AI logic for attract mode
+        // ===== IMPROVED A* PATHFINDING AI =====
+        class AStarPathfinder {
+            constructor() {
+                this.visualizePath = false;
+            }
+
+            heuristic(a, b) {
+                return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+            }
+
+            getNeighbors(node) {
+                const neighbors = [];
+                const directions = [
+                    {x: 0, y: -1}, // up
+                    {x: 0, y: 1},  // down
+                    {x: -1, y: 0}, // left
+                    {x: 1, y: 0}   // right
+                ];
+
+                directions.forEach(dir => {
+                    const newX = node.x + dir.x;
+                    const newY = node.y + dir.y;
+
+                    if (newX >= 0 && newX < tileCount && newY >= 0 && newY < tileCount) {
+                        neighbors.push({x: newX, y: newY});
+                    }
+                });
+
+                return neighbors;
+            }
+
+            isCollision(pos) {
+                // Check if position collides with snake body (excluding tail which will move)
+                for (let i = 0; i < snake.length - 1; i++) {
+                    if (snake[i].x === pos.x && snake[i].y === pos.y) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            findPath(start, goal) {
+                const openSet = [start];
+                const closedSet = new Set();
+                const cameFrom = new Map();
+                const gScore = new Map();
+                const fScore = new Map();
+
+                const key = (node) => `${node.x},${node.y}`;
+
+                gScore.set(key(start), 0);
+                fScore.set(key(start), this.heuristic(start, goal));
+
+                while (openSet.length > 0) {
+                    // Find node with lowest fScore
+                    let current = openSet[0];
+                    let currentIdx = 0;
+                    for (let i = 1; i < openSet.length; i++) {
+                        if (fScore.get(key(openSet[i])) < fScore.get(key(current))) {
+                            current = openSet[i];
+                            currentIdx = i;
+                        }
+                    }
+
+                    if (current.x === goal.x && current.y === goal.y) {
+                        // Reconstruct path
+                        const path = [current];
+                        while (cameFrom.has(key(current))) {
+                            current = cameFrom.get(key(current));
+                            path.unshift(current);
+                        }
+                        return path;
+                    }
+
+                    openSet.splice(currentIdx, 1);
+                    closedSet.add(key(current));
+
+                    const neighbors = this.getNeighbors(current);
+                    for (const neighbor of neighbors) {
+                        const neighborKey = key(neighbor);
+
+                        if (closedSet.has(neighborKey)) continue;
+                        if (this.isCollision(neighbor)) continue;
+
+                        const tentativeGScore = gScore.get(key(current)) + 1;
+
+                        if (!openSet.find(n => key(n) === neighborKey)) {
+                            openSet.push(neighbor);
+                        } else if (tentativeGScore >= gScore.get(neighborKey)) {
+                            continue;
+                        }
+
+                        cameFrom.set(neighborKey, current);
+                        gScore.set(neighborKey, tentativeGScore);
+                        fScore.set(neighborKey, tentativeGScore + this.heuristic(neighbor, goal));
+                    }
+                }
+
+                return null; // No path found
+            }
+        }
+
+        const pathfinder = new AStarPathfinder();
+
+        // Improved AI with A* pathfinding and safety checks
         function getAIMove() {
             const head = snake[0];
 
-            // Calculate the direction to the food
+            // Try A* pathfinding first
+            const path = pathfinder.findPath(head, food);
+
+            if (path && path.length > 1) {
+                // Update visualizer
+                updateAIVisualizer(`Path found: ${path.length} steps`);
+
+                const nextStep = path[1];
+                const moveX = nextStep.x - head.x;
+                const moveY = nextStep.y - head.y;
+
+                return {dx: moveX, dy: moveY, priority: 100};
+            }
+
+            // Fallback to safer greedy approach if A* fails
+            updateAIVisualizer('Using fallback strategy');
+
             const toFoodX = food.x - head.x;
             const toFoodY = food.y - head.y;
 
-            // Get valid moves (not opposite to current direction and not into walls/self)
             const possibleMoves = [];
-
-            // Try each direction
             const moves = [
                 {dx: 0, dy: -1, priority: 0}, // up
                 {dx: 0, dy: 1, priority: 0},  // down
@@ -1200,30 +1430,40 @@
             ];
 
             moves.forEach(move => {
-                // Check if move is opposite to current direction
                 if ((move.dx === -dx && move.dy === -dy) && (dx !== 0 || dy !== 0)) {
                     return;
                 }
 
                 const newHead = {x: head.x + move.dx, y: head.y + move.dy};
 
-                // Check if move is valid (not into wall or self)
                 if (newHead.x >= 0 && newHead.x < tileCount &&
                     newHead.y >= 0 && newHead.y < tileCount &&
                     !snake.some(segment => segment.x === newHead.x && segment.y === newHead.y)) {
 
-                    // Calculate priority based on distance to food
                     move.priority = 0;
+
+                    // Check if this move leads to a dead end
+                    const hasEscapeRoute = moves.some(nextMove => {
+                        const futureHead = {
+                            x: newHead.x + nextMove.dx,
+                            y: newHead.y + nextMove.dy
+                        };
+                        return futureHead.x >= 0 && futureHead.x < tileCount &&
+                               futureHead.y >= 0 && futureHead.y < tileCount &&
+                               !snake.some(seg => seg.x === futureHead.x && seg.y === futureHead.y);
+                    });
+
+                    if (hasEscapeRoute) {
+                        move.priority += 20; // Bonus for having escape routes
+                    }
 
                     // Prioritize moves toward food
                     if (Math.abs(toFoodX) > Math.abs(toFoodY)) {
-                        // Horizontal movement is more important
                         if (toFoodX > 0 && move.dx === 1) move.priority += 10;
                         if (toFoodX < 0 && move.dx === -1) move.priority += 10;
                         if (toFoodY > 0 && move.dy === 1) move.priority += 5;
                         if (toFoodY < 0 && move.dy === -1) move.priority += 5;
                     } else {
-                        // Vertical movement is more important
                         if (toFoodY > 0 && move.dy === 1) move.priority += 10;
                         if (toFoodY < 0 && move.dy === -1) move.priority += 10;
                         if (toFoodX > 0 && move.dx === 1) move.priority += 5;
@@ -1234,14 +1474,20 @@
                 }
             });
 
-            // Sort by priority and return best move
             if (possibleMoves.length > 0) {
                 possibleMoves.sort((a, b) => b.priority - a.priority);
                 return possibleMoves[0];
             }
 
-            // If no valid moves, return current direction
             return {dx, dy};
+        }
+
+        function updateAIVisualizer(message) {
+            if (currentGameMode === 'demo' || currentGameMode === 'train') {
+                aiVisualizer.textContent = message;
+            } else {
+                aiVisualizer.textContent = '';
+            }
         }
 
         function update() {
@@ -1582,6 +1828,9 @@
         // Initialize theme system
         loadThemePreference();
         initThemeSelector();
+
+        // Restore panel states
+        restorePanelStates();
 
         // Try to load saved model
         aiAgent.load();
