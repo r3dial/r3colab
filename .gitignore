@@ -1,0 +1,15 @@
+# Deployment files specific to hosting environment
+index.html
+update-site.sh
+
+# Claude Code configuration
+.claude/
+
+# Editor and system files
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Node modules (if npm is added later)
+node_modules/
