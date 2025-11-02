@@ -301,6 +301,118 @@
             padding: 6px 10px;
             font-size: 0.8em;
         }
+
+        .theme-selector {
+            position: absolute;
+            top: 70px;
+            left: 20px;
+            color: #00ffff;
+            text-align: left;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(0, 255, 255, 0.5);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            max-width: 280px;
+        }
+
+        .theme-selector h3 {
+            color: #00ffff;
+            text-shadow: 0 0 5px #00ffff;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .theme-card {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 0, 255, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .theme-card:hover {
+            border-color: rgba(255, 0, 255, 0.6);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.4);
+        }
+
+        .theme-card.active {
+            border-color: #ff00ff;
+            background: rgba(255, 0, 255, 0.2);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.6);
+        }
+
+        .theme-card .theme-icon {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .theme-card .theme-name {
+            font-size: 0.85em;
+            color: #ff00ff;
+            text-shadow: 0 0 5px #ff00ff;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .theme-card .theme-preview {
+            width: 40px;
+            height: 40px;
+            margin: 5px auto;
+            border-radius: 4px;
+            box-shadow: 0 0 10px;
+        }
+
+        .theme-stats {
+            font-size: 0.75em;
+            line-height: 1.4;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .theme-stats .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+
+        .theme-stats .stat-label {
+            color: #00ffff;
+        }
+
+        .theme-stats .stat-value {
+            color: #00ff00;
+            text-shadow: 0 0 3px #00ff00;
+            font-weight: bold;
+        }
+
+        .theme-stats .stat-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(0, 255, 255, 0.2);
+            border-radius: 2px;
+            margin-top: 2px;
+            overflow: hidden;
+        }
+
+        .theme-stats .stat-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            box-shadow: 0 0 5px #00ffff;
+            transition: width 0.3s ease;
+        }
     </style>
 </head>
 <body>
@@ -324,6 +436,11 @@
         <div id="attractModeOverlay" class="attract-mode-overlay">
             <div class="demo-label">DEMO MODE</div>
             <div>PRESS ANY KEY TO START</div>
+        </div>
+        <div class="theme-selector">
+            <h3>🎨 Snake Themes</h3>
+            <div class="theme-grid" id="themeGrid"></div>
+            <div class="theme-stats" id="themeStats"></div>
         </div>
         <div class="ai-controls">
             <h3>🤖 AI Controls</h3>
@@ -357,6 +474,196 @@
         const highScoreElement = document.getElementById('highScore');
         const gameOverText = document.getElementById('gameOverText');
         const attractModeOverlay = document.getElementById('attractModeOverlay');
+
+        // ===== SNAKE THEME SYSTEM =====
+        const snakeThemes = {
+            cyberViper: {
+                id: 'cyberViper',
+                name: 'Cyber Viper',
+                icon: '🐍',
+                headColor: '#39ff14',
+                bodyColor: '#00ffff',
+                shadowColor: '#39ff14',
+                trailEffect: false,
+                speed: 1.0,
+                pointMultiplier: 1.0,
+                startLength: 1,
+                description: 'Balanced stats for all-around gameplay'
+            },
+            neonSpeedster: {
+                id: 'neonSpeedster',
+                name: 'Neon Speedster',
+                icon: '⚡',
+                headColor: '#ffff00',
+                bodyColor: '#ff8800',
+                shadowColor: '#ffff00',
+                trailEffect: true,
+                speed: 1.3,
+                pointMultiplier: 0.8,
+                startLength: 1,
+                description: 'Fast movement, lower point rewards'
+            },
+            dataCollector: {
+                id: 'dataCollector',
+                name: 'Data Collector',
+                icon: '💎',
+                headColor: '#ff00ff',
+                bodyColor: '#8800ff',
+                shadowColor: '#ff00ff',
+                trailEffect: false,
+                speed: 0.75,
+                pointMultiplier: 1.5,
+                startLength: 2,
+                description: 'Slow but high scoring potential'
+            },
+            quantumGhost: {
+                id: 'quantumGhost',
+                name: 'Quantum Ghost',
+                icon: '👻',
+                headColor: '#00ffff',
+                bodyColor: '#0088ff',
+                shadowColor: '#00ffff',
+                trailEffect: true,
+                speed: 1.1,
+                pointMultiplier: 1.2,
+                startLength: 1,
+                description: 'Ethereal trails with bonus scoring'
+            }
+        };
+
+        let currentTheme = snakeThemes.cyberViper;
+        const trailParticles = [];
+
+        // Load saved theme preference
+        function loadThemePreference() {
+            const savedTheme = localStorage.getItem('snakeThemePreference');
+            if (savedTheme && snakeThemes[savedTheme]) {
+                currentTheme = snakeThemes[savedTheme];
+            }
+        }
+
+        // Save theme preference
+        function saveThemePreference(themeId) {
+            localStorage.setItem('snakeThemePreference', themeId);
+        }
+
+        // Initialize theme selector UI
+        function initThemeSelector() {
+            const themeGrid = document.getElementById('themeGrid');
+            themeGrid.innerHTML = '';
+
+            Object.values(snakeThemes).forEach(theme => {
+                const card = document.createElement('div');
+                card.className = 'theme-card';
+                if (theme.id === currentTheme.id) {
+                    card.classList.add('active');
+                }
+
+                const preview = document.createElement('div');
+                preview.className = 'theme-preview';
+                preview.style.backgroundColor = theme.headColor;
+                preview.style.boxShadow = `0 0 10px ${theme.shadowColor}`;
+
+                card.innerHTML = `
+                    <div class="theme-icon">${theme.icon}</div>
+                    <div class="theme-name">${theme.name}</div>
+                `;
+                card.insertBefore(preview, card.children[1]);
+
+                card.onclick = () => selectTheme(theme.id);
+                themeGrid.appendChild(card);
+            });
+
+            updateThemeStats();
+        }
+
+        // Select a theme
+        function selectTheme(themeId) {
+            if (!snakeThemes[themeId]) return;
+
+            currentTheme = snakeThemes[themeId];
+            saveThemePreference(themeId);
+
+            // Update active state in UI
+            document.querySelectorAll('.theme-card').forEach((card, index) => {
+                card.classList.remove('active');
+            });
+            document.querySelectorAll('.theme-card')[Object.keys(snakeThemes).indexOf(themeId)].classList.add('active');
+
+            updateThemeStats();
+
+            // Restart game to apply new theme
+            if (gameRunning) {
+                restartGame();
+                if (currentGameMode !== 'human') {
+                    dx = 1;
+                    dy = 0;
+                    startGame();
+                }
+            }
+        }
+
+        // Update theme stats display
+        function updateThemeStats() {
+            const statsDiv = document.getElementById('themeStats');
+            statsDiv.innerHTML = `
+                <div class="stat-row">
+                    <span class="stat-label">Speed:</span>
+                    <span class="stat-value">${(currentTheme.speed * 100).toFixed(0)}%</span>
+                </div>
+                <div class="stat-bar">
+                    <div class="stat-fill" style="width: ${currentTheme.speed * 100}%"></div>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Points:</span>
+                    <span class="stat-value">${(currentTheme.pointMultiplier * 100).toFixed(0)}%</span>
+                </div>
+                <div class="stat-bar">
+                    <div class="stat-fill" style="width: ${currentTheme.pointMultiplier * 100}%"></div>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Trail FX:</span>
+                    <span class="stat-value">${currentTheme.trailEffect ? 'Yes' : 'No'}</span>
+                </div>
+            `;
+        }
+
+        // Trail particle system
+        class TrailParticle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.alpha = 1.0;
+                this.size = Math.random() * 3 + 2;
+            }
+
+            update() {
+                this.alpha -= 0.02;
+            }
+
+            draw(ctx, offsetX, offsetY, gridSize) {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(
+                    offsetX + this.x * gridSize + gridSize / 2,
+                    offsetY + this.y * gridSize + gridSize / 2,
+                    this.size,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+                ctx.restore();
+            }
+
+            isDead() {
+                return this.alpha <= 0;
+            }
+        }
 
         // ===== NEURAL NETWORK IMPLEMENTATION =====
         class NeuralNetwork {
@@ -867,7 +1174,9 @@
             if (gameRunning) return;
             gameRunning = true;
             gameOverText.style.display = 'none';
-            const interval = currentGameMode === 'train' ? Math.max(10, 100 / trainingSpeed) : 100;
+            // Apply theme speed multiplier
+            const baseInterval = currentGameMode === 'train' ? Math.max(10, 100 / trainingSpeed) : 100;
+            const interval = Math.max(10, baseInterval / currentTheme.speed);
             gameLoop = setInterval(update, interval);
         }
 
@@ -971,6 +1280,19 @@
                 }
             }
 
+            // Add trail particles if theme has trail effect
+            if (currentTheme.trailEffect && snake.length > 0 && (dx !== 0 || dy !== 0)) {
+                trailParticles.push(new TrailParticle(snake[0].x, snake[0].y, currentTheme.headColor));
+            }
+
+            // Update and remove dead trail particles
+            for (let i = trailParticles.length - 1; i >= 0; i--) {
+                trailParticles[i].update();
+                if (trailParticles[i].isDead()) {
+                    trailParticles.splice(i, 1);
+                }
+            }
+
             // Move snake
             const head = {x: snake[0].x + dx, y: snake[0].y + dy};
 
@@ -1003,7 +1325,8 @@
             let reward = 0;
             // Check food collision
             if (head.x === food.x && head.y === food.y) {
-                score += 10;
+                const points = Math.round(10 * currentTheme.pointMultiplier);
+                score += points;
                 scoreElement.textContent = score;
 
                 if (score > highScore) {
@@ -1077,22 +1400,26 @@
             ctx.lineWidth = 2;
             ctx.stroke();
 
+            // Draw trail particles
+            if (currentTheme.trailEffect) {
+                trailParticles.forEach(particle => {
+                    particle.draw(ctx, offsetX, offsetY, gridSize);
+                });
+            }
+
             // Reset shadow for snake
             ctx.shadowBlur = 15;
 
-            // Draw snake with neon green/cyan glow
+            // Draw snake with theme colors
             snake.forEach((segment, index) => {
                 if (index === 0) {
-                    // Head - bright neon green
-                    ctx.fillStyle = '#39ff14';
-                    ctx.shadowColor = '#39ff14';
+                    // Head - use theme head color
+                    ctx.fillStyle = currentTheme.headColor;
+                    ctx.shadowColor = currentTheme.shadowColor;
                 } else {
-                    // Body - gradient to cyan
-                    const ratio = index / snake.length;
-                    const green = Math.floor(57 + ratio * (0 - 57));
-                    const red = Math.floor(57 * (1 - ratio));
-                    ctx.fillStyle = `rgb(${red}, 255, ${green + 200})`;
-                    ctx.shadowColor = '#00ffff';
+                    // Body - use theme body color with gradient
+                    ctx.fillStyle = currentTheme.bodyColor;
+                    ctx.shadowColor = currentTheme.bodyColor;
                 }
 
                 ctx.fillRect(
@@ -1103,7 +1430,7 @@
                 );
 
                 // Add border glow
-                ctx.strokeStyle = index === 0 ? '#39ff14' : '#00ffff';
+                ctx.strokeStyle = index === 0 ? currentTheme.headColor : currentTheme.bodyColor;
                 ctx.lineWidth = 1;
                 ctx.strokeRect(
                     offsetX + segment.x * gridSize + 1,
@@ -1166,7 +1493,11 @@
         }
 
         function restartGame() {
+            // Initialize snake with theme's starting length
             snake = [{x: 10, y: 10}];
+            for (let i = 1; i < currentTheme.startLength; i++) {
+                snake.push({x: 10 - i, y: 10});
+            }
             dx = 0;
             dy = 0;
             score = 0;
@@ -1174,6 +1505,7 @@
             inputQueue = [];
             previousState = null;
             previousAction = null;
+            trailParticles.length = 0; // Clear trail particles
             placeFood();
             gameOverText.style.display = 'none';
             gameRunning = false;
@@ -1215,7 +1547,8 @@
 
             if (gameRunning) {
                 clearInterval(gameLoop);
-                const interval = currentGameMode === 'train' ? Math.max(10, 100 / trainingSpeed) : 100;
+                const baseInterval = currentGameMode === 'train' ? Math.max(10, 100 / trainingSpeed) : 100;
+                const interval = Math.max(10, baseInterval / currentTheme.speed);
                 gameLoop = setInterval(update, interval);
             }
         }
@@ -1245,6 +1578,10 @@
 
         // Initial draw
         draw();
+
+        // Initialize theme system
+        loadThemePreference();
+        initThemeSelector();
 
         // Try to load saved model
         aiAgent.load();
