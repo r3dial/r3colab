@@ -700,7 +700,7 @@
                 </div>
                 <div class="training-speed">
                     <label>Training Speed: <span id="speedLabel">1x</span></label>
-                    <input type="range" id="speedSlider" min="1" max="50" value="1" onchange="updateTrainingSpeed(this.value)">
+                    <input type="range" id="speedSlider" min="1" max="100" value="1" onchange="updateTrainingSpeed(this.value)">
                 </div>
                 <div class="model-controls">
                     <button onclick="saveModel()">💾 Save</button>
@@ -1609,8 +1609,11 @@
             if (gameRunning) return;
             gameRunning = true;
             gameOverText.style.display = 'none';
-            // Apply theme speed multiplier
-            const baseInterval = currentGameMode === 'train' ? Math.max(10, 100 / trainingSpeed) : 100;
+            // Apply speed multiplier ONLY for training mode, human gameplay is always 1x
+            let baseInterval = 100; // Default for human and demo modes
+            if (currentGameMode === 'train') {
+                baseInterval = Math.max(10, 100 / trainingSpeed);
+            }
             const interval = Math.max(10, baseInterval / currentTheme.speed);
             gameLoop = setInterval(update, interval);
         }
@@ -2124,9 +2127,10 @@
             trainingSpeed = parseInt(value);
             document.getElementById('speedLabel').textContent = trainingSpeed + 'x';
 
-            if (gameRunning) {
+            // Only update game loop speed if we're in training mode
+            if (gameRunning && currentGameMode === 'train') {
                 clearInterval(gameLoop);
-                const baseInterval = currentGameMode === 'train' ? Math.max(10, 100 / trainingSpeed) : 100;
+                const baseInterval = Math.max(10, 100 / trainingSpeed);
                 const interval = Math.max(10, baseInterval / currentTheme.speed);
                 gameLoop = setInterval(update, interval);
             }
