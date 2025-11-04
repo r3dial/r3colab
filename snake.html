@@ -212,7 +212,7 @@
             }
         }
 
-        .ai-controls {
+        .unified-panel {
             position: absolute;
             top: 70px;
             right: 20px;
@@ -220,7 +220,7 @@
             text-align: left;
             z-index: 10;
             background: rgba(0, 0, 0, 0.7);
-            padding: 15px;
+            padding: 0;
             border-radius: 10px;
             border: 2px solid rgba(255, 0, 255, 0.5);
             box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
@@ -228,35 +228,72 @@
             transition: all 0.3s ease;
         }
 
-        .ai-controls.collapsed {
-            padding: 10px;
-        }
-
-        .ai-controls.collapsed .ai-content {
+        .unified-panel.collapsed .panel-content {
             display: none;
         }
 
-        .ai-controls h3 {
-            color: #ff00ff;
-            text-shadow: 0 0 5px #ff00ff;
-            margin-bottom: 10px;
-            font-size: 1.1em;
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            border-bottom: 2px solid rgba(255, 0, 255, 0.3);
         }
 
-        .ai-controls .mode-buttons {
+        .panel-tabs {
+            display: flex;
+            gap: 5px;
+        }
+
+        .tab-button {
+            padding: 6px 12px;
+            font-size: 0.85em;
+            background: rgba(255, 0, 255, 0.2);
+            color: #ff00ff;
+            border: 1px solid rgba(255, 0, 255, 0.3);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0;
+        }
+
+        .tab-button:hover {
+            background: rgba(255, 0, 255, 0.3);
+            transform: none;
+        }
+
+        .tab-button.active {
+            background: rgba(255, 0, 255, 0.5);
+            border-color: #ff00ff;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.6);
+        }
+
+        .panel-content {
+            padding: 15px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .mode-buttons {
             display: flex;
             flex-direction: column;
             gap: 8px;
             margin-bottom: 15px;
         }
 
-        .ai-controls button {
+        .mode-buttons button {
             padding: 8px 15px;
             font-size: 0.9em;
             margin: 0;
         }
 
-        .ai-controls button.active {
+        .mode-buttons button.active {
             background: rgba(255, 0, 255, 0.5);
             box-shadow: 0 0 15px rgba(255, 0, 255, 0.8);
         }
@@ -311,36 +348,6 @@
             font-size: 0.8em;
         }
 
-        .theme-selector {
-            position: absolute;
-            top: 400px;
-            right: 20px;
-            color: #00ffff;
-            text-align: left;
-            z-index: 10;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 15px;
-            border-radius: 10px;
-            border: 2px solid rgba(0, 255, 255, 0.5);
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-            max-width: 280px;
-            transition: all 0.3s ease;
-        }
-
-        .theme-selector.collapsed {
-            padding: 10px;
-        }
-
-        .theme-selector.collapsed .theme-content {
-            display: none;
-        }
-
-        .theme-selector h3 {
-            color: #00ffff;
-            text-shadow: 0 0 5px #00ffff;
-            margin-bottom: 10px;
-            font-size: 1.1em;
-        }
 
         .theme-grid {
             display: grid;
@@ -676,7 +683,7 @@
         }
 
         @media (max-width: 768px) {
-            .theme-selector, .ai-controls {
+            .unified-panel {
                 max-width: 200px;
                 font-size: 0.9em;
             }
@@ -718,37 +725,40 @@
             <div class="demo-label">DEMO MODE</div>
             <div>PRESS ANY KEY TO START</div>
         </div>
-        <div class="theme-selector" id="themePanel">
-            <button class="panel-toggle" onclick="togglePanel('themePanel')" title="Toggle Theme Panel">-</button>
-            <h3>🎨 Snake Themes</h3>
-            <div class="theme-content">
-                <div class="theme-grid" id="themeGrid"></div>
-                <div class="theme-stats" id="themeStats"></div>
+        <div class="unified-panel" id="unifiedPanel">
+            <div class="panel-header">
+                <div class="panel-tabs">
+                    <button class="tab-button active" onclick="switchTab('ai')">🤖 AI</button>
+                    <button class="tab-button" onclick="switchTab('themes')">🎨 Themes</button>
+                </div>
+                <button class="panel-toggle" onclick="togglePanel('unifiedPanel')" title="Toggle Panel">-</button>
             </div>
-        </div>
-        <div class="ai-controls" id="aiPanel">
-            <button class="panel-toggle" onclick="togglePanel('aiPanel')" title="Toggle AI Panel">-</button>
-            <h3>🤖 AI Controls</h3>
-            <div class="ai-content">
-                <div class="mode-buttons">
-                    <button id="humanModeBtn" class="active" onclick="setGameMode('human')">👤 Human Play</button>
-                    <button id="aiDemoBtn" onclick="setGameMode('demo')">🎮 AI Demo</button>
-                    <button id="aiTrainBtn" onclick="setGameMode('train')">🧠 AI Training</button>
+            <div class="panel-content">
+                <div class="tab-content active" id="aiTab">
+                    <div class="mode-buttons">
+                        <button id="humanModeBtn" class="active" onclick="setGameMode('human')">👤 Human Play</button>
+                        <button id="aiDemoBtn" onclick="setGameMode('demo')">🎮 AI Demo</button>
+                        <button id="aiTrainBtn" onclick="setGameMode('train')">🧠 AI Training</button>
+                    </div>
+                    <div class="ai-stats">
+                        <div><span class="label">Games Played:</span> <span class="value" id="gamesPlayed">0</span></div>
+                        <div><span class="label">Average Score:</span> <span class="value" id="avgScore">0</span></div>
+                        <div><span class="label">Best AI Score:</span> <span class="value" id="bestAIScore">0</span></div>
+                        <div><span class="label">Epsilon:</span> <span class="value" id="epsilon">1.00</span></div>
+                    </div>
+                    <div class="training-speed">
+                        <label>Training Speed: <span id="speedLabel">1x</span></label>
+                        <input type="range" id="speedSlider" min="1" max="100" value="1" onchange="updateTrainingSpeed(this.value)">
+                    </div>
+                    <div class="model-controls">
+                        <button onclick="saveModel()">💾 Save</button>
+                        <button onclick="loadModel()">📂 Load</button>
+                        <button onclick="resetModel()">🔄 Reset</button>
+                    </div>
                 </div>
-                <div class="ai-stats">
-                    <div><span class="label">Games Played:</span> <span class="value" id="gamesPlayed">0</span></div>
-                    <div><span class="label">Average Score:</span> <span class="value" id="avgScore">0</span></div>
-                    <div><span class="label">Best AI Score:</span> <span class="value" id="bestAIScore">0</span></div>
-                    <div><span class="label">Epsilon:</span> <span class="value" id="epsilon">1.00</span></div>
-                </div>
-                <div class="training-speed">
-                    <label>Training Speed: <span id="speedLabel">1x</span></label>
-                    <input type="range" id="speedSlider" min="1" max="100" value="1" onchange="updateTrainingSpeed(this.value)">
-                </div>
-                <div class="model-controls">
-                    <button onclick="saveModel()">💾 Save</button>
-                    <button onclick="loadModel()">📂 Load</button>
-                    <button onclick="resetModel()">🔄 Reset</button>
+                <div class="tab-content" id="themesTab">
+                    <div class="theme-grid" id="themeGrid"></div>
+                    <div class="theme-stats" id="themeStats"></div>
                 </div>
             </div>
         </div>
@@ -841,6 +851,29 @@
         const aiVisualizer = document.getElementById('aiVisualizer');
 
         // ===== UI PANEL MANAGEMENT =====
+        function switchTab(tabName) {
+            // Remove active class from all tab buttons
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+
+            // Remove active class from all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
+
+            // Add active class to clicked tab button
+            event.target.classList.add('active');
+
+            // Show the corresponding tab content
+            if (tabName === 'ai') {
+                document.getElementById('aiTab').classList.add('active');
+            } else if (tabName === 'themes') {
+                document.getElementById('themesTab').classList.add('active');
+            }
+
+            // Save the active tab to localStorage
+            localStorage.setItem('activeTab', tabName);
+        }
+
         function togglePanel(panelId) {
             const panel = document.getElementById(panelId);
             const toggleBtn = panel.querySelector('.panel-toggle');
@@ -858,15 +891,33 @@
 
         // Restore panel states from localStorage
         function restorePanelStates() {
-            ['themePanel', 'aiPanel'].forEach(panelId => {
-                const isCollapsed = localStorage.getItem(panelId + '_collapsed') === 'true';
-                if (isCollapsed) {
-                    const panel = document.getElementById(panelId);
-                    const toggleBtn = panel.querySelector('.panel-toggle');
-                    panel.classList.add('collapsed');
-                    toggleBtn.textContent = '+';
-                }
-            });
+            // Restore unified panel collapsed state
+            const panelId = 'unifiedPanel';
+            const isCollapsed = localStorage.getItem(panelId + '_collapsed') === 'true';
+            if (isCollapsed) {
+                const panel = document.getElementById(panelId);
+                const toggleBtn = panel.querySelector('.panel-toggle');
+                panel.classList.add('collapsed');
+                toggleBtn.textContent = '+';
+            }
+
+            // Restore active tab
+            const activeTab = localStorage.getItem('activeTab') || 'ai';
+            if (activeTab === 'themes') {
+                const tabButtons = document.querySelectorAll('.tab-button');
+                const tabContents = document.querySelectorAll('.tab-content');
+
+                tabButtons.forEach(btn => {
+                    if (btn.textContent.includes('Themes')) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+
+                document.getElementById('aiTab').classList.remove('active');
+                document.getElementById('themesTab').classList.add('active');
+            }
         }
 
         // ===== SNAKE THEME SYSTEM =====
