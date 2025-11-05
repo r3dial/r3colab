@@ -1644,13 +1644,13 @@
 
         // Game settings
         const gridSize = 20;
-        let tileCount;
+        const tileCount = 42; // Fixed board size: 42x42 units
 
         // Initialize canvas size
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            tileCount = Math.floor(Math.min(canvas.width, canvas.height) / gridSize);
+            // Canvas is responsive, but board size is fixed at 42x42
         }
 
         // Resize canvas on load and window resize
