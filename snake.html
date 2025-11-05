@@ -112,11 +112,16 @@
         .controls {
             position: absolute;
             bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
+            right: 20px;
             color: #00ffff;
             text-shadow: 0 0 5px #00ffff;
             z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(0, 255, 255, 0.5);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            text-align: center;
         }
 
         .controls p {
@@ -226,10 +231,6 @@
             box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
             max-width: 280px;
             transition: all 0.3s ease;
-        }
-
-        .unified-panel.collapsed .panel-content {
-            display: none;
         }
 
         .panel-header {
@@ -439,31 +440,6 @@
             transition: width 0.3s ease;
         }
 
-        .panel-toggle {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: rgba(255, 0, 255, 0.3);
-            border: 1px solid #ff00ff;
-            color: #ff00ff;
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            padding: 0;
-            line-height: 1;
-        }
-
-        .panel-toggle:hover {
-            background: rgba(255, 0, 255, 0.5);
-            box-shadow: 0 0 10px rgba(255, 0, 255, 0.6);
-            transform: scale(1.1);
-        }
 
         .ai-visualizer {
             position: absolute;
@@ -479,32 +455,41 @@
 
         .metrics-dashboard {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90%;
-            max-width: 1200px;
-            height: 85%;
-            background: rgba(0, 0, 0, 0.95);
+            top: 120px;
+            left: 20px;
+            width: 350px;
+            max-height: calc(100vh - 140px);
+            background: rgba(0, 0, 0, 0.9);
             border: 3px solid #ff00ff;
             border-radius: 15px;
             box-shadow: 0 0 30px rgba(255, 0, 255, 0.6);
             z-index: 100;
             display: none;
-            padding: 20px;
+            padding: 15px;
             overflow-y: auto;
+            transition: all 0.3s ease;
         }
 
         .metrics-dashboard.visible {
             display: block;
         }
 
+        .metrics-dashboard.fullscreen {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 1200px;
+            height: 85%;
+            max-height: none;
+        }
+
         .metrics-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
             border-bottom: 2px solid rgba(0, 255, 255, 0.5);
         }
 
@@ -512,27 +497,50 @@
             color: #ff00ff;
             text-shadow: 0 0 10px #ff00ff;
             margin: 0;
+            font-size: 1.3em;
+        }
+
+        .metrics-dashboard.fullscreen .metrics-header h2 {
             font-size: 2em;
         }
 
-        .metrics-close {
+        .metrics-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .metrics-close, .metrics-fullscreen {
             background: rgba(255, 0, 255, 0.3);
             border: 2px solid #ff00ff;
             color: #ff00ff;
-            padding: 8px 20px;
+            padding: 6px 15px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 1em;
+            font-size: 0.9em;
             font-weight: bold;
+            margin: 0;
         }
 
-        .metrics-close:hover {
+        .metrics-dashboard.fullscreen .metrics-close,
+        .metrics-dashboard.fullscreen .metrics-fullscreen {
+            padding: 8px 20px;
+            font-size: 1em;
+        }
+
+        .metrics-close:hover, .metrics-fullscreen:hover {
             background: rgba(255, 0, 255, 0.5);
             box-shadow: 0 0 15px rgba(255, 0, 255, 0.8);
+            transform: none;
         }
 
         .metrics-grid {
             display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .metrics-dashboard.fullscreen .metrics-grid {
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             margin-bottom: 20px;
@@ -541,54 +549,88 @@
         .metric-card {
             background: rgba(0, 0, 0, 0.6);
             border: 2px solid rgba(0, 255, 255, 0.5);
-            border-radius: 10px;
-            padding: 15px;
+            border-radius: 8px;
+            padding: 10px;
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .metrics-dashboard.fullscreen .metric-card {
+            padding: 15px;
+            border-radius: 10px;
         }
 
         .metric-card .metric-label {
             color: #00ffff;
+            font-size: 0.75em;
+            margin-bottom: 3px;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        .metrics-dashboard.fullscreen .metric-card .metric-label {
             font-size: 0.9em;
             margin-bottom: 5px;
-            text-shadow: 0 0 5px #00ffff;
         }
 
         .metric-card .metric-value {
             color: #00ff00;
-            font-size: 1.8em;
+            font-size: 1.3em;
             font-weight: bold;
             text-shadow: 0 0 10px #00ff00;
         }
 
+        .metrics-dashboard.fullscreen .metric-card .metric-value {
+            font-size: 1.8em;
+        }
+
         .metric-card .metric-subtext {
             color: #ff00ff;
+            font-size: 0.7em;
+            margin-top: 3px;
+            text-shadow: 0 0 3px #ff00ff;
+        }
+
+        .metrics-dashboard.fullscreen .metric-card .metric-subtext {
             font-size: 0.8em;
             margin-top: 5px;
-            text-shadow: 0 0 3px #ff00ff;
         }
 
         .graph-container {
             background: rgba(0, 0, 0, 0.6);
             border: 2px solid rgba(255, 0, 255, 0.5);
-            border-radius: 10px;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+        }
+
+        .metrics-dashboard.fullscreen .graph-container {
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+            border-radius: 10px;
         }
 
         .graph-container h3 {
             color: #ff00ff;
             text-shadow: 0 0 5px #ff00ff;
+            margin: 0 0 8px 0;
+            font-size: 1em;
+        }
+
+        .metrics-dashboard.fullscreen .graph-container h3 {
             margin: 0 0 15px 0;
             font-size: 1.3em;
         }
 
         .graph-canvas {
             width: 100%;
-            height: 300px;
+            height: 200px;
             background: rgba(0, 0, 0, 0.8);
             border: 1px solid rgba(0, 255, 255, 0.3);
             border-radius: 5px;
+        }
+
+        .metrics-dashboard.fullscreen .graph-canvas {
+            height: 300px;
         }
 
         .export-controls {
@@ -731,7 +773,6 @@
                     <button class="tab-button active" onclick="switchTab('ai')">🤖 AI</button>
                     <button class="tab-button" onclick="switchTab('themes')">🎨 Themes</button>
                 </div>
-                <button class="panel-toggle" onclick="togglePanel('unifiedPanel')" title="Toggle Panel">-</button>
             </div>
             <div class="panel-content">
                 <div class="tab-content active" id="aiTab">
@@ -769,8 +810,11 @@
         <div class="metrics-hint" id="metricsHint">Press 'M' to view Training Metrics</div>
         <div class="metrics-dashboard" id="metricsDashboard">
             <div class="metrics-header">
-                <h2>📊 AI Training Metrics Dashboard</h2>
-                <button class="metrics-close" onclick="toggleMetricsDashboard()">Close (M)</button>
+                <h2>📊 AI Training Metrics</h2>
+                <div class="metrics-controls">
+                    <button class="metrics-fullscreen" onclick="toggleMetricsFullscreen()" title="Toggle Fullscreen">⛶</button>
+                    <button class="metrics-close" onclick="toggleMetricsDashboard()">Close (M)</button>
+                </div>
             </div>
             <div class="metrics-grid">
                 <div class="metric-card">
@@ -874,33 +918,8 @@
             localStorage.setItem('activeTab', tabName);
         }
 
-        function togglePanel(panelId) {
-            const panel = document.getElementById(panelId);
-            const toggleBtn = panel.querySelector('.panel-toggle');
-
-            if (panel.classList.contains('collapsed')) {
-                panel.classList.remove('collapsed');
-                toggleBtn.textContent = '-';
-                localStorage.setItem(panelId + '_collapsed', 'false');
-            } else {
-                panel.classList.add('collapsed');
-                toggleBtn.textContent = '+';
-                localStorage.setItem(panelId + '_collapsed', 'true');
-            }
-        }
-
         // Restore panel states from localStorage
         function restorePanelStates() {
-            // Restore unified panel collapsed state
-            const panelId = 'unifiedPanel';
-            const isCollapsed = localStorage.getItem(panelId + '_collapsed') === 'true';
-            if (isCollapsed) {
-                const panel = document.getElementById(panelId);
-                const toggleBtn = panel.querySelector('.panel-toggle');
-                panel.classList.add('collapsed');
-                toggleBtn.textContent = '+';
-            }
-
             // Restore active tab
             const activeTab = localStorage.getItem('activeTab') || 'ai';
             if (activeTab === 'themes') {
@@ -2320,6 +2339,15 @@
             dashboard.classList.toggle('visible');
             if (dashboard.classList.contains('visible')) {
                 updateMetricsDashboard();
+                drawRewardGraph();
+            }
+        }
+
+        function toggleMetricsFullscreen() {
+            const dashboard = document.getElementById('metricsDashboard');
+            dashboard.classList.toggle('fullscreen');
+            // Redraw graph to adjust to new size
+            if (dashboard.classList.contains('visible')) {
                 drawRewardGraph();
             }
         }
