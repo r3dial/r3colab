@@ -107,8 +107,6 @@
             height: calc(100% - 130px);
             background-color: #000000;
             display: block;
-            border: 1px solid #00ffff;
-            box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
         }
 
         .controls {
@@ -2117,6 +2115,11 @@
                 ctx.lineTo(offsetX + gridWidth, offsetY + i * gridSize);
                 ctx.stroke();
             }
+
+            // Draw 1px border around the game board
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(offsetX, offsetY, gridWidth, gridHeight);
 
             // Draw food with neon pink glow
             ctx.shadowBlur = 20;
