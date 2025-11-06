@@ -101,10 +101,10 @@
 
         #gameCanvas {
             position: absolute;
-            top: 0;
+            top: 130px;
             left: 0;
             width: 100%;
-            height: 100%;
+            height: calc(100% - 130px);
             background-color: #000000;
             display: block;
         }
@@ -112,7 +112,7 @@
         .controls {
             position: absolute;
             bottom: 20px;
-            right: 20px;
+            left: 20px;
             color: #00ffff;
             text-shadow: 0 0 5px #00ffff;
             z-index: 10;
@@ -647,7 +647,7 @@
 
         .metrics-hint {
             position: absolute;
-            bottom: 20px;
+            bottom: 120px;
             right: 20px;
             color: #00ffff;
             font-size: 0.9em;
