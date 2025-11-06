@@ -2,6 +2,8 @@
 
 Public Colab - A collection of interactive web projects and experiments.
 
+**[🎮 Play Snake Game →](snake.html)**
+
 ## Projects
 
 ### Snake Game - AI Learning Edition
