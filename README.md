@@ -103,13 +103,16 @@ The game includes a sophisticated Deep Q-Learning Network that learns to play Sn
 
 **Starting AI Training:**
 1. Click **🧠 AI Training** in the AI Controls panel
-2. Adjust the **Training Speed** slider (1x-100x) to control how fast the AI learns
-3. The AI will play continuously, learning from each game
+2. Adjust the **Training Speed** slider (1x-10000x) to control how fast the AI learns
+3. Use **Speed Preset Buttons** for quick access to common speeds (1x, 10x, 50x, 100x, 500x, 1000x, MAX)
+4. The AI will play continuously, learning from each game
 
 **Training Speed Explained:**
 - **1x-10x**: Watch the AI learn in real-time
 - **10x-50x**: Accelerated training with visible gameplay
-- **50x-100x**: Maximum speed training for quick results
+- **50x-500x**: Fast training for quick results
+- **500x-1000x**: Ultra-fast training mode
+- **MAX (10000x)**: Maximum speed training for instant results
 
 **Understanding AI Progress:**
 - **Games Played**: Total number of training episodes completed
@@ -168,7 +171,9 @@ Press **M** to open the comprehensive metrics dashboard showing:
 - Different themes offer different challenges - experiment!
 
 **For AI Training:**
-- Train at high speed (50x+) for 500-1000 episodes initially
+- Train at high speed (500x-1000x) for 500-1000 episodes initially
+- Use MAX speed (10000x) for extremely fast training sessions
+- Use preset buttons for quick speed adjustments during training
 - Watch epsilon decrease to see the AI shift from exploration to exploitation
 - Best results typically appear after 1000+ training episodes
 - Use Demo mode to evaluate the trained AI's performance
