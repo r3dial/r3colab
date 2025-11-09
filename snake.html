@@ -333,39 +333,6 @@
             font-size: 0.85em;
         }
 
-        .training-speed input[type="range"] {
-            width: 100%;
-        }
-
-        .speed-presets {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 4px;
-            margin-top: 8px;
-        }
-
-        .speed-presets button {
-            padding: 4px 8px;
-            font-size: 0.7em;
-            background: rgba(0, 255, 255, 0.1);
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            color: #00ffff;
-            cursor: pointer;
-            border-radius: 3px;
-            transition: all 0.2s;
-        }
-
-        .speed-presets button:hover {
-            background: rgba(0, 255, 255, 0.2);
-            border-color: rgba(0, 255, 255, 0.5);
-            box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
-        }
-
-        .speed-presets button:active {
-            background: rgba(0, 255, 255, 0.3);
-            transform: scale(0.95);
-        }
-
         .model-controls {
             display: flex;
             gap: 5px;
@@ -817,17 +784,7 @@
                         <div><span class="label">Epsilon:</span> <span class="value" id="epsilon">1.00</span></div>
                     </div>
                     <div class="training-speed">
-                        <label>Training Speed: <span id="speedLabel">1x</span></label>
-                        <input type="range" id="speedSlider" min="1" max="10000" value="1" onchange="updateTrainingSpeed(this.value)">
-                        <div class="speed-presets">
-                            <button onclick="setSpeedPreset(1)">1x</button>
-                            <button onclick="setSpeedPreset(10)">10x</button>
-                            <button onclick="setSpeedPreset(50)">50x</button>
-                            <button onclick="setSpeedPreset(100)">100x</button>
-                            <button onclick="setSpeedPreset(500)">500x</button>
-                            <button onclick="setSpeedPreset(1000)">1000x</button>
-                            <button onclick="setSpeedPreset('max')">MAX</button>
-                        </div>
+                        <label>Training Speed: <span id="speedLabel">MAX</span></label>
                     </div>
                     <div class="model-controls">
                         <button onclick="saveModel()">💾 Save</button>
@@ -1612,7 +1569,7 @@
         let currentGameMode = 'human';
         let previousState = null;
         let previousAction = null;
-        let trainingSpeed = 1;
+        let trainingSpeed = 10000; // MAX speed for optimal training
 
         // Sound mute state
         let isMuted = false;
@@ -2314,17 +2271,9 @@
             if (mode === 'human') {
                 document.getElementById('humanModeBtn').classList.add('active');
                 aiMode = false;
-                // Reset training speed to 1x for human mode to prevent speed carryover
-                trainingSpeed = 1;
-                document.getElementById('speedSlider').value = 1;
-                document.getElementById('speedLabel').textContent = '1x';
             } else if (mode === 'demo') {
                 document.getElementById('aiDemoBtn').classList.add('active');
                 aiMode = true;
-                // Reset training speed to 1x for demo mode to prevent speed carryover
-                trainingSpeed = 1;
-                document.getElementById('speedSlider').value = 1;
-                document.getElementById('speedLabel').textContent = '1x';
             } else if (mode === 'train') {
                 document.getElementById('aiTrainBtn').classList.add('active');
                 aiMode = true;
@@ -2339,31 +2288,6 @@
             }
         }
 
-        function updateTrainingSpeed(value) {
-            const newSpeed = parseInt(value);
-            trainingSpeed = newSpeed;
-            document.getElementById('speedLabel').textContent = newSpeed + 'x';
-
-            // Only update game loop speed if we're actively running in training mode
-            if (gameRunning && currentGameMode === 'train') {
-                clearInterval(gameLoop);
-                const baseInterval = Math.max(1, 100 / trainingSpeed);
-                const interval = Math.max(1, baseInterval / currentTheme.speed);
-                gameLoop = setInterval(update, interval);
-            }
-        }
-
-        function setSpeedPreset(preset) {
-            let speed;
-            if (preset === 'max') {
-                // MAX mode: set to 10000x for essentially instant training
-                speed = 10000;
-            } else {
-                speed = preset;
-            }
-            document.getElementById('speedSlider').value = speed;
-            updateTrainingSpeed(speed);
-        }
 
         function saveModel() {
             if (aiAgent.save()) {
